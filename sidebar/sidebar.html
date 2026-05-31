@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anime Assistant</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <div id="app">
+    <div id="header">
+      <div id="header-left">
+        <img src="../icons/icon.png" id="header-icon" alt="">
+        <span id="header-title">Anime Assistant</span>
+      </div>
+      <button id="settings-btn" title="Settings">⚙</button>
+    </div>
+
+    <div id="episode-bar" style="display: none;">
+      <span id="anime-name"></span>
+      <span id="episode-label"></span>
+    </div>
+
+    <div id="settings-panel">
+      <div class="settings-row">
+        <label for="api-key-input">Gemini API Key</label>
+        <input type="password" id="api-key-input" placeholder="Paste your API key here">
+      </div>
+      <div class="settings-row">
+        <label for="model-input">Model</label>
+        <input type="text" id="model-input" value="gemini-2.5-flash">
+      </div>
+      <div class="settings-row settings-row-inline">
+        <label for="spoiler-toggle">Spoiler-free mode</label>
+        <input type="checkbox" id="spoiler-toggle">
+      </div>
+      <button id="save-key-btn">Save API Key</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <div id="input-bar">
+      <input type="text" id="user-input" placeholder="Ask about this episode...">
+      <button id="send-btn">Send</button>
+    </div>
+
+    <div id="status-msg"></div>
+  </div>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>

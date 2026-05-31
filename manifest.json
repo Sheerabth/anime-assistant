@@ -1,0 +1,42 @@
+{
+  "manifest_version": 2,
+  "name": "Anime Assistant",
+  "version": "1.0",
+  "license": "LGPL-3.0-only",
+  "description": "Chat with AI about the anime you're watching on Crunchyroll",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.crunchyroll.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "sidebar_action": {
+    "default_panel": "sidebar/sidebar.html",
+    "default_title": "Anime Assistant",
+    "default_icon": {
+      "48": "icons/icon-48.png",
+      "96": "icons/icon-96.png"
+    }
+  },
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "anime-assistant@yourdomain.com",
+      "data_collection_permissions": {
+        "required": [
+          "personalCommunications"
+        ]
+      }
+    }
+  }
+}
