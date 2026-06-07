@@ -6,7 +6,7 @@ html, body {
   height: 100%;
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
-  background: #1a1a2e;
+  background: #0e1a1e;
   color: #e0e0e0;
 }
 
@@ -21,8 +21,8 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  background: #0f0f23;
-  border-bottom: 1px solid #2a2a4a;
+  background: #091316;
+  border-bottom: 1px solid #1a2e36;
   flex-shrink: 0;
 }
 
@@ -43,6 +43,27 @@ html, body {
   color: #ffffff;
 }
 
+#clear-chat-bar {
+  padding: 0 12px 6px;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+#clear-chat-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+#clear-chat-btn:hover {
+  color: #f87171;
+}
+
 #settings-btn {
   background: none;
   border: none;
@@ -56,11 +77,11 @@ html, body {
 
 #settings-btn:hover {
   color: #fff;
-  background: #2a2a4a;
+  background: #1a2e36;
 }
 
 #episode-bar {
-  background: #ff640a;
+  background: linear-gradient(135deg, #0e7490, #06b6d4);
   padding: 6px 12px;
   display: flex;
   flex-direction: column;
@@ -86,8 +107,8 @@ html, body {
 
 #settings-panel {
   display: none;
-  background: #0f0f23;
-  border-bottom: 1px solid #2a2a4a;
+  background: #091316;
+  border-bottom: 1px solid #1a2e36;
   padding: 12px;
   flex-shrink: 0;
 }
@@ -122,8 +143,8 @@ html, body {
 
 .settings-row input[type="password"],
 .settings-row input[type="text"] {
-  background: #1a1a2e;
-  border: 1px solid #2a2a4a;
+  background: #0e1a1e;
+  border: 1px solid #1a2e36;
   border-radius: 6px;
   color: #e0e0e0;
   padding: 6px 8px;
@@ -132,18 +153,35 @@ html, body {
 }
 
 .settings-row input:focus {
-  border-color: #ff640a;
+  border-color: #0891b2;
 }
 
 .settings-row input[type="checkbox"] {
-  accent-color: #ff640a;
+  accent-color: #0891b2;
   width: 16px;
   height: 16px;
   cursor: pointer;
 }
 
+#clear-manual-btn {
+  background: #111e24;
+  border: 1px solid #1a2e36;
+  color: #aaa;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#clear-manual-btn:hover {
+  color: #fff;
+  border-color: #0891b2;
+}
+
 #save-key-btn {
-  background: #ff640a;
+  background: #0891b2;
   border: none;
   color: white;
   padding: 7px 14px;
@@ -155,7 +193,7 @@ html, body {
 }
 
 #save-key-btn:hover {
-  background: #e55a09;
+  background: #0e7490;
 }
 
 #messages {
@@ -171,11 +209,11 @@ html, body {
 }
 
 #messages::-webkit-scrollbar-track {
-  background: #1a1a2e;
+  background: #0e1a1e;
 }
 
 #messages::-webkit-scrollbar-thumb {
-  background: #2a2a4a;
+  background: #1a2e36;
   border-radius: 2px;
 }
 
@@ -191,14 +229,14 @@ html, body {
 
 .bubble-user {
   margin-left: auto;
-  background: #ff640a;
+  background: #0891b2;
   color: white;
   border-bottom-right-radius: 3px;
 }
 
 .bubble-model {
   margin-right: auto;
-  background: #16213e;
+  background: #111e24;
   color: #e0e0e0;
   border-bottom-left-radius: 3px;
 }
@@ -207,14 +245,14 @@ html, body {
   display: flex;
   gap: 8px;
   padding: 10px;
-  border-top: 1px solid #2a2a4a;
+  border-top: 1px solid #1a2e36;
   flex-shrink: 0;
 }
 
 #user-input {
   flex: 1;
-  background: #16213e;
-  border: 1px solid #2a2a4a;
+  background: #111e24;
+  border: 1px solid #1a2e36;
   border-radius: 8px;
   color: #e0e0e0;
   padding: 8px 10px;
@@ -223,11 +261,11 @@ html, body {
 }
 
 #user-input:focus {
-  border-color: #ff640a;
+  border-color: #0891b2;
 }
 
 #send-btn {
-  background: #ff640a;
+  background: #0891b2;
   border: none;
   color: white;
   padding: 8px 14px;
@@ -239,7 +277,7 @@ html, body {
 }
 
 #send-btn:hover {
-  background: #e55a09;
+  background: #0e7490;
 }
 
 #send-btn:disabled {
@@ -256,5 +294,18 @@ html, body {
 }
 
 #status-msg.error {
-  color: #ff6b6b;
+  color: #f87171;
+}
+
+.bubble code {
+  background: #091316;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.bubble em {
+  font-style: italic;
+  color: #67e8f9;
 }

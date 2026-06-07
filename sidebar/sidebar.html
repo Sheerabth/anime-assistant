@@ -10,7 +10,7 @@
   <div id="app">
     <div id="header">
       <div id="header-left">
-        <img src="../icons/icon.png" id="header-icon" alt="">
+        <img src="../icons/icon-96.svg" id="header-icon" alt="">
         <span id="header-title">Anime Assistant</span>
       </div>
       <button id="settings-btn" title="Settings">⚙</button>
@@ -34,10 +34,21 @@
         <label for="spoiler-toggle">Spoiler-free mode</label>
         <input type="checkbox" id="spoiler-toggle">
       </div>
+      <div id="manual-override-row" class="settings-row" style="display: none;">
+        <label for="manual-input">What are you watching?</label>
+        <div class="settings-row-inline" style="gap: 6px; display: flex;">
+          <input type="text" id="manual-input" placeholder="e.g. Log Horizon S1E4">
+          <button id="clear-manual-btn">Reset</button>
+        </div>
+      </div>
       <button id="save-key-btn">Save API Key</button>
     </div>
 
     <div id="messages"></div>
+
+    <div id="clear-chat-bar">
+      <button id="clear-chat-btn">Clear chat</button>
+    </div>
 
     <div id="input-bar">
       <input type="text" id="user-input" placeholder="Ask about this episode...">
