@@ -5,7 +5,9 @@ let chatHistory = [];
 let currentTabId = null;
 const tabHistories = {};
 let spoilerFree = false;
-let isCrunchyroll = false;
+let useContentScript = false;
+const STRUCTURED_HOSTS = ["crunchyroll.com", "netflix.com"];
+const STRUCTURED_SOURCES = new Set(["crunchyroll", "netflix"]);
 let sidebarWindowId = null;
 
 const messagesEl = document.getElementById("messages");
@@ -53,7 +55,7 @@ async function init() {
 
 function updateEpisodeBar(episodeData) {
   currentEpisode = episodeData;
-  if (episodeData.source === "crunchyroll") {
+  if (STRUCTURED_SOURCES.has(episodeData.source)) {
     animeNameEl.textContent = episodeData.animeName || episodeData.pageTitle;
     episodeLabelEl.textContent = episodeData.episodeInfo || "";
   } else {
@@ -63,10 +65,16 @@ function updateEpisodeBar(episodeData) {
   episodeBar.style.display = "flex";
 }
 
-// Crunchyroll: content script notifies title change → re-fetch structured episode data
 browser.runtime.onMessage.addListener(async (message, sender) => {
+  if (message.type === "EPISODE_CLEARED") {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    updateEpisodeBar({ pageTitle: tabs[0]?.title || "", source: "title" });
+    return;
+  }
+
+  // Crunchyroll / Netflix: content script notifies title change → re-fetch structured episode data
   if (message.type !== "TITLE_CHANGED") return;
-  if (!isCrunchyroll) return;
+  if (!useContentScript) return;
 
   const tabId = sender.tab && sender.tab.id;
   if (!tabId) return;
@@ -79,7 +87,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
 
 // Non-Crunchyroll: use tabs.onUpdated directly — more reliable than content script messaging
 browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (!changeInfo.title || isCrunchyroll || !tab.active || tab.windowId !== sidebarWindowId) return;
+  if (!changeInfo.title || useContentScript || !tab.active || tab.windowId !== sidebarWindowId) return;
 
   const stored = await browser.storage.local.get("manualOverride");
   if (!stored.manualOverride) manualInput.value = changeInfo.title;
@@ -113,10 +121,10 @@ async function handleTabChange() {
 
   switchTabHistory(tab.id);
 
-  isCrunchyroll = !!(tab.url && tab.url.includes("crunchyroll.com"));
-  manualOverrideRow.style.display = isCrunchyroll ? "none" : "block";
+  useContentScript = STRUCTURED_HOSTS.some(h => tab.url?.includes(h));
+  manualOverrideRow.style.display = useContentScript ? "none" : "block";
 
-  if (!isCrunchyroll) {
+  if (!useContentScript) {
     const stored = await browser.storage.local.get("manualOverride");
     manualInput.value = stored.manualOverride || tab.title || "";
     updateEpisodeBar({
@@ -141,7 +149,7 @@ function buildSystemPrompt() {
     ? "IMPORTANT: The user is in SPOILER-FREE mode. Only discuss events that happen IN THIS EPISODE OR BEFORE IT. Never reveal what happens in future episodes."
     : "You may discuss future events if the user asks, but warn them before revealing spoilers.";
 
-  const contextSection = currentEpisode.source === "crunchyroll"
+  const contextSection = STRUCTURED_SOURCES.has(currentEpisode.source)
     ? `Here is everything known about what they are watching:
 - Anime name: ${currentEpisode.animeName}
 - Episode info: ${currentEpisode.episodeInfo}
