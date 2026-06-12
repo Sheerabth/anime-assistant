@@ -1,0 +1,9 @@
+{
+  "name": "anime-assistant",
+  "version": "1.3.0",
+  "scripts": {
+    "build:chrome": "rm -rf dist-chrome && mkdir -p dist-chrome/sidebar dist-chrome/icons dist-chrome/lib && cp manifests/chrome.json dist-chrome/manifest.json && cp background.js content.js dist-chrome/ && cp sidebar/* dist-chrome/sidebar/ && cp icons/* dist-chrome/icons/ && cp lib/browser-polyfill.js dist-chrome/lib/",
+    "build:firefox": "rm -rf dist-firefox && mkdir -p dist-firefox/sidebar dist-firefox/icons dist-firefox/lib && cp manifests/firefox.json dist-firefox/manifest.json && cp content.js dist-firefox/ && cp sidebar/* dist-firefox/sidebar/ && cp icons/* dist-firefox/icons/ && cp lib/browser-polyfill.js dist-firefox/lib/",
+    "build": "npm run build:chrome && npm run build:firefox"
+  }
+}

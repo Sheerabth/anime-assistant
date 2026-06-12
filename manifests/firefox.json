@@ -1,19 +1,14 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Anime Assistant",
-  "version": "1.2",
-  "description": "Chat with AI about the anime you're watching on Crunchyroll",
-  "permissions": [
-    "activeTab",
-    "tabs",
-    "storage",
-    "<all_urls>",
-    "https://generativelanguage.googleapis.com/*"
-  ],
+  "version": "1.3",
+  "description": "Chat with AI about the anime you're watching",
+  "permissions": ["activeTab", "tabs", "storage"],
+  "host_permissions": ["<all_urls>", "https://generativelanguage.googleapis.com/*"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["lib/browser-polyfill.js", "content.js"],
       "run_at": "document_idle"
     }
   ],
@@ -25,9 +20,17 @@
       "96": "icons/icon-96.svg"
     }
   },
+  "action": {
+    "default_icon": {
+      "48": "icons/icon-48.svg",
+      "96": "icons/icon-96.svg"
+    },
+    "default_title": "Anime Assistant"
+  },
   "icons": {
     "48": "icons/icon-48.svg",
-    "96": "icons/icon-96.svg"
+    "96": "icons/icon-96.svg",
+    "128": "icons/icon-128.svg"
   },
   "browser_specific_settings": {
     "gecko": {

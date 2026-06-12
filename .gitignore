@@ -1,3 +1,7 @@
+# Build output
+dist-chrome/
+dist-firefox/
+
 # Firefox extension package
 *.xpi
 *.zip

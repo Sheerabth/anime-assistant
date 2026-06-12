@@ -2,7 +2,7 @@ const isCrunchyroll = window.location.hostname.includes("crunchyroll.com");
 const isNetflix = window.location.hostname.includes("netflix.com");
 
 browser.runtime.onMessage.addListener((message) => {
-  if (message.type !== "GET_EPISODE") return;
+  if (message.type !== "GET_EPISODE") return false;
 
   if (isCrunchyroll) {
     return Promise.resolve({
@@ -27,13 +27,17 @@ browser.runtime.onMessage.addListener((message) => {
   }
 });
 
+function safeSendMessage(msg, observer) {
+  browser.runtime.sendMessage(msg).catch(() => observer.disconnect());
+}
+
 if (isCrunchyroll) {
   let lastTitle = document.title;
 
   const observer = new MutationObserver(() => {
     if (document.title !== lastTitle) {
       lastTitle = document.title;
-      browser.runtime.sendMessage({ type: "TITLE_CHANGED", pageTitle: document.title });
+      safeSendMessage({ type: "TITLE_CHANGED", pageTitle: document.title }, observer);
     }
   });
 
@@ -53,7 +57,7 @@ if (isNetflix) {
       lastUrl = location.href;
       lastAnimeName = "";
       if (!location.href.includes("/watch/")) {
-        browser.runtime.sendMessage({ type: "EPISODE_CLEARED" });
+        safeSendMessage({ type: "EPISODE_CLEARED" }, observer);
       }
     }
 
@@ -61,7 +65,7 @@ if (isNetflix) {
     const animeName = el?.querySelector('h4')?.innerText;
     if (animeName && animeName !== lastAnimeName) {
       lastAnimeName = animeName;
-      browser.runtime.sendMessage({ type: "TITLE_CHANGED", pageTitle: document.title });
+      safeSendMessage({ type: "TITLE_CHANGED", pageTitle: document.title }, observer);
     }
   });
 

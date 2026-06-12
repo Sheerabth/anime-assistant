@@ -8,13 +8,12 @@ let spoilerFree = false;
 let useContentScript = false;
 const STRUCTURED_HOSTS = ["crunchyroll.com", "netflix.com"];
 const STRUCTURED_SOURCES = new Set(["crunchyroll", "netflix"]);
-let sidebarWindowId = null;
 
 const messagesEl = document.getElementById("messages");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
 const statusMsg = document.getElementById("status-msg");
-const episodeBar = document.getElementById("episode-bar");
+const episodeBar = document.getElementById("episode-info");
 const animeNameEl = document.getElementById("anime-name");
 const episodeLabelEl = document.getElementById("episode-label");
 const clearChatBtn = document.getElementById("clear-chat-btn");
@@ -29,9 +28,6 @@ const manualInput = document.getElementById("manual-input");
 const clearManualBtn = document.getElementById("clear-manual-btn");
 
 async function init() {
-  const win = await browser.windows.getCurrent();
-  sidebarWindowId = win.id;
-
   const stored = await browser.storage.local.get(["geminiApiKey", "geminiModel", "spoilerFree", "manualOverride"]);
 
   if (stored.geminiApiKey) {
@@ -87,7 +83,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
 
 // Non-Crunchyroll: use tabs.onUpdated directly — more reliable than content script messaging
 browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (!changeInfo.title || useContentScript || !tab.active || tab.windowId !== sidebarWindowId) return;
+  if (!changeInfo.title || useContentScript || !tab.active) return;
 
   const stored = await browser.storage.local.get("manualOverride");
   if (!stored.manualOverride) manualInput.value = changeInfo.title;
