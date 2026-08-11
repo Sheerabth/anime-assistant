@@ -1,5 +1,4 @@
-let apiKey = "";
-let geminiModel = "gemini-2.5-flash";
+let activeProviderId = "gemini";
 let currentEpisode = null;
 let chatHistory = [];
 let currentTabId = null;
@@ -19,25 +18,40 @@ const episodeLabelEl = document.getElementById("episode-label");
 const clearChatBtn = document.getElementById("clear-chat-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const settingsPanel = document.getElementById("settings-panel");
+const providerSelect = document.getElementById("provider-select");
 const apiKeyInput = document.getElementById("api-key-input");
-const saveKeyBtn = document.getElementById("save-key-btn");
+const apiKeyLabel = document.getElementById("api-key-label");
 const modelInput = document.getElementById("model-input");
+const modelList = document.getElementById("model-list");
+const fetchModelsBtn = document.getElementById("fetch-models-btn");
+const saveKeyBtn = document.getElementById("save-key-btn");
 const spoilerToggle = document.getElementById("spoiler-toggle");
 const manualOverrideRow = document.getElementById("manual-override-row");
 const manualInput = document.getElementById("manual-input");
 const clearManualBtn = document.getElementById("clear-manual-btn");
+const customProviderForm = document.getElementById("custom-provider-form");
+const customNameInput = document.getElementById("custom-name");
+const customBaseUrlInput = document.getElementById("custom-base-url");
+const customAdapterInput = document.getElementById("custom-adapter");
+const customModelInput = document.getElementById("custom-model");
+const customModelList = document.getElementById("custom-model-list");
+const fetchCustomModelsBtn = document.getElementById("fetch-custom-models-btn");
+const customApiKeyInput = document.getElementById("custom-api-key");
+const saveCustomProviderBtn = document.getElementById("save-custom-provider-btn");
+const cancelCustomProviderBtn = document.getElementById("cancel-custom-provider-btn");
+const deleteProviderRow = document.getElementById("delete-provider-row");
+const deleteProviderBtn = document.getElementById("delete-provider-btn");
 
 async function init() {
-  const stored = await browser.storage.local.get(["geminiApiKey", "geminiModel", "spoilerFree", "manualOverride"]);
+  await migrateLegacySettings();
 
-  if (stored.geminiApiKey) {
-    apiKey = stored.geminiApiKey;
-    apiKeyInput.value = stored.geminiApiKey;
-  }
-  if (stored.geminiModel) {
-    geminiModel = stored.geminiModel;
-    modelInput.value = geminiModel;
-  }
+  const state = await loadProviderState();
+  activeProviderId = state.activeProviderId;
+
+  await populateProviderSelect();
+  await loadProviderUI(activeProviderId);
+
+  const stored = await browser.storage.local.get(["spoilerFree", "manualOverride"]);
   if (stored.spoilerFree !== undefined) {
     spoilerFree = stored.spoilerFree;
     spoilerToggle.checked = spoilerFree;
@@ -47,6 +61,54 @@ async function init() {
   }
 
   handleTabChange();
+}
+
+async function populateProviderSelect() {
+  const providers = await getAllProviders();
+  providerSelect.innerHTML = "";
+
+  for (const p of providers) {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name;
+    providerSelect.appendChild(opt);
+  }
+
+  const addOpt = document.createElement("option");
+  addOpt.value = "__add_custom__";
+  addOpt.textContent = "+ Custom provider...";
+  providerSelect.appendChild(addOpt);
+
+  providerSelect.value = activeProviderId;
+}
+
+async function loadProviderUI(id) {
+  const provider = await getProvider(id);
+  if (!provider) return;
+
+  apiKeyLabel.textContent = `${provider.name} API Key`;
+  apiKeyInput.value = provider.apiKey || "";
+  modelInput.value = provider.model || provider.defaultModel;
+
+  const suggestions = new Set([
+    ...(provider.models || []),
+    ...(await getFetchedModelList(id) || [])
+  ]);
+  populateModelDatalist(modelList, [...suggestions]);
+
+  const adapter = ADAPTERS[provider.adapter];
+  fetchModelsBtn.style.display = adapter?.fetchModels ? "inline-flex" : "none";
+
+  deleteProviderRow.style.display = provider.isCustom ? "block" : "none";
+}
+
+function populateModelDatalist(datalistEl, models) {
+  datalistEl.innerHTML = "";
+  for (const m of models) {
+    const opt = document.createElement("option");
+    opt.value = m;
+    datalistEl.appendChild(opt);
+  }
 }
 
 function updateEpisodeBar(episodeData) {
@@ -177,33 +239,8 @@ If you cannot identify an anime from the context provided, decline to answer and
 Be concise. Max 3-4 sentences per answer unless the user explicitly asks for more detail. No preamble, no restating the question. If you can't find specific episode information, say so in one sentence.`;
 }
 
-async function callGemini(history) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
-
-  const body = {
-    system_instruction: {
-      parts: [{ text: buildSystemPrompt() }]
-    },
-    tools: [{ google_search: {} }],
-    contents: history
-  };
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error?.message || "API error");
-  }
-
-  const data = await response.json();
-  const parts = data.candidates?.[0]?.content?.parts;
-  const textPart = parts?.find(p => p.text);
-  if (!textPart) throw new Error("No text in response");
-  return textPart.text;
+async function callModel(history) {
+  return callProvider(activeProviderId, history, buildSystemPrompt());
 }
 
 function appendInline(el, text) {
@@ -274,8 +311,9 @@ async function sendMessage() {
   const text = userInput.value.trim();
   if (!text) return;
 
-  if (!apiKey) {
-    setStatus("Please add your Gemini API key in settings (gear icon)", true);
+  const provider = await getProvider(activeProviderId);
+  if (!provider || !provider.apiKey) {
+    setStatus("Please add your API key in settings (gear icon)", true);
     return;
   }
 
@@ -294,7 +332,7 @@ async function sendMessage() {
   sendBtn.disabled = true;
 
   try {
-    const reply = await callGemini(sentHistory);
+    const reply = await callModel(sentHistory);
     sentHistory.push({ role: "model", parts: [{ text: reply }] });
     if (currentTabId === sentTabId) {
       renderMessage("model", reply);
@@ -318,18 +356,181 @@ settingsBtn.addEventListener("click", () => {
   settingsPanel.classList.toggle("open");
 });
 
+providerSelect.addEventListener("change", async () => {
+  const value = providerSelect.value;
+
+  if (value === "__add_custom__") {
+    customProviderForm.style.display = "block";
+    document.getElementById("provider-settings").style.display = "none";
+    deleteProviderRow.style.display = "none";
+    populateModelDatalist(customModelList, []);
+    customNameInput.focus();
+    return;
+  }
+
+  customProviderForm.style.display = "none";
+  document.getElementById("provider-settings").style.display = "block";
+  activeProviderId = value;
+  await setActiveProvider(activeProviderId);
+  await loadProviderUI(activeProviderId);
+});
+
 saveKeyBtn.addEventListener("click", async () => {
   const key = apiKeyInput.value.trim();
   if (!key) return;
-  apiKey = key;
-  await browser.storage.local.set({ geminiApiKey: key });
+  await setProviderApiKey(activeProviderId, key);
   setStatus("API key saved!");
   setTimeout(() => setStatus(""), 2000);
 });
 
 modelInput.addEventListener("change", async () => {
-  geminiModel = modelInput.value.trim() || "gemini-2.5-flash";
-  await browser.storage.local.set({ geminiModel });
+  const model = modelInput.value.trim();
+  if (!model) return;
+  await setProviderModel(activeProviderId, model);
+});
+
+fetchModelsBtn.addEventListener("click", async () => {
+  const provider = await getProvider(activeProviderId);
+  if (!provider || !provider.apiKey) {
+    setStatus("Save an API key before fetching models", true);
+    return;
+  }
+
+  fetchModelsBtn.disabled = true;
+  fetchModelsBtn.setAttribute("aria-busy", "true");
+  setStatus("Fetching models...");
+
+  try {
+    const models = await fetchProviderModels(activeProviderId);
+    const suggestions = [...new Set([...(provider.models || []), ...models])];
+    populateModelDatalist(modelList, suggestions);
+    setStatus(`Loaded ${models.length} models`);
+    setTimeout(() => setStatus(""), 3000);
+  } catch (err) {
+    setStatus(`Failed to fetch models: ${err.message}`, true);
+  } finally {
+    fetchModelsBtn.disabled = false;
+    fetchModelsBtn.removeAttribute("aria-busy");
+  }
+});
+
+fetchCustomModelsBtn.addEventListener("click", async () => {
+  const baseUrl = customBaseUrlInput.value.trim().replace(/\/$/, "");
+  const adapter = customAdapterInput.value;
+  const apiKey = customApiKeyInput.value.trim();
+
+  if (!baseUrl || !adapter || !apiKey) {
+    setStatus("Fill in base URL, adapter, and API key to fetch models", true);
+    return;
+  }
+
+  if (!/^https?:\/\//i.test(baseUrl)) {
+    setStatus("Base URL must start with http:// or https://", true);
+    return;
+  }
+
+  const tempProvider = {
+    id: "temp",
+    name: "Custom",
+    baseUrl,
+    adapter,
+    apiKey,
+    extraHeaders: {}
+  };
+
+  fetchCustomModelsBtn.disabled = true;
+  fetchCustomModelsBtn.setAttribute("aria-busy", "true");
+  setStatus("Fetching models...");
+
+  try {
+    const models = await fetchModelsForProvider(tempProvider);
+    populateModelDatalist(customModelList, models);
+    setStatus(`Loaded ${models.length} models`);
+    setTimeout(() => setStatus(""), 3000);
+  } catch (err) {
+    setStatus(`Failed to fetch models: ${err.message}`, true);
+  } finally {
+    fetchCustomModelsBtn.disabled = false;
+    fetchCustomModelsBtn.removeAttribute("aria-busy");
+  }
+});
+
+saveCustomProviderBtn.addEventListener("click", async () => {
+  const name = customNameInput.value.trim();
+  const baseUrl = customBaseUrlInput.value.trim().replace(/\/$/, "");
+  const adapter = customAdapterInput.value;
+  const model = customModelInput.value.trim();
+  const apiKey = customApiKeyInput.value.trim();
+
+  if (!name || !baseUrl || !model) {
+    setStatus("Please fill in name, base URL, and model.", true);
+    return;
+  }
+
+  if (!/^https?:\/\//i.test(baseUrl)) {
+    setStatus("Base URL must start with http:// or https://", true);
+    return;
+  }
+
+  const id = makeProviderId(name);
+  const existing = await getProvider(id);
+  if (existing) {
+    setStatus("A provider with that name already exists.", true);
+    return;
+  }
+
+  await addCustomProvider({
+    id,
+    name,
+    baseUrl,
+    adapter,
+    defaultModel: model,
+    model,
+    apiKey
+  });
+
+  customNameInput.value = "";
+  customBaseUrlInput.value = "";
+  customAdapterInput.value = "openai";
+  customModelInput.value = "";
+  customApiKeyInput.value = "";
+  populateModelDatalist(customModelList, []);
+  customProviderForm.style.display = "none";
+  document.getElementById("provider-settings").style.display = "block";
+
+  activeProviderId = id;
+  await populateProviderSelect();
+  await loadProviderUI(activeProviderId);
+  setStatus("Custom provider added!");
+  setTimeout(() => setStatus(""), 2000);
+});
+
+customAdapterInput.addEventListener("change", () => {
+  const adapter = ADAPTERS[customAdapterInput.value];
+  fetchCustomModelsBtn.style.display = adapter?.fetchModels ? "inline-flex" : "none";
+});
+
+cancelCustomProviderBtn.addEventListener("click", () => {
+  customNameInput.value = "";
+  customBaseUrlInput.value = "";
+  customAdapterInput.value = "openai";
+  customModelInput.value = "";
+  customApiKeyInput.value = "";
+  populateModelDatalist(customModelList, []);
+  fetchCustomModelsBtn.disabled = false;
+  fetchCustomModelsBtn.removeAttribute("aria-busy");
+  customProviderForm.style.display = "none";
+  document.getElementById("provider-settings").style.display = "block";
+  providerSelect.value = activeProviderId;
+  loadProviderUI(activeProviderId);
+});
+
+deleteProviderBtn.addEventListener("click", async () => {
+  if (!confirm("Remove this custom provider?")) return;
+  await deleteCustomProvider(activeProviderId);
+  activeProviderId = "gemini";
+  await populateProviderSelect();
+  await loadProviderUI(activeProviderId);
 });
 
 spoilerToggle.addEventListener("change", async () => {

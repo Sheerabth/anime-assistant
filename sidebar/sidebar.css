@@ -128,6 +128,26 @@ html, body {
   cursor: pointer;
 }
 
+.settings-row select {
+  background: #0e1a1e;
+  border: 1px solid #1e3d4a;
+  border-radius: 6px;
+  color: #e0e0e0;
+  padding: 6px 8px;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+.settings-row select:focus {
+  border-color: #0891b2;
+}
+
+.settings-row select option {
+  background: #0e1a1e;
+  color: #e0e0e0;
+}
+
 #clear-manual-btn {
   background: #0e1a1e;
   border: 1px solid #1e3d4a;
@@ -145,20 +165,79 @@ html, body {
   border-color: #0891b2;
 }
 
-#save-key-btn {
-  background: #0891b2;
-  border: none;
-  color: white;
+.model-row {
+  margin-top: 10px;
+}
+
+.settings-btn,
+.secondary-btn {
+  background: #0e1a1e;
+  border: 1px solid #1e3d4a;
+  color: #aaa;
   padding: 7px 14px;
   border-radius: 6px;
   font-size: 12px;
-  font-weight: 600;
   cursor: pointer;
   width: 100%;
 }
 
-#save-key-btn:hover {
-  background: #0e7490;
+.settings-btn:hover,
+.secondary-btn:hover {
+  color: #fff;
+  border-color: #0891b2;
+}
+
+.secondary-btn {
+  flex: 1;
+}
+
+.danger-text {
+  color: #f87171;
+}
+
+.danger-text:hover {
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+.custom-actions {
+  gap: 8px;
+  display: flex;
+}
+
+.model-input-wrap {
+  display: flex;
+  gap: 6px;
+}
+
+.model-input-wrap select,
+.model-input-wrap input {
+  flex: 1;
+}
+
+.model-input-wrap button {
+  background: #0e1a1e;
+  border: 1px solid #1e3d4a;
+  color: #aaa;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-input-wrap button:hover {
+  color: #fff;
+  border-color: #0891b2;
+}
+
+.model-input-wrap button:disabled,
+.model-input-wrap button[aria-busy="true"] {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 #messages {

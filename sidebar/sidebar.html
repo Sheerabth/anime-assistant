@@ -23,13 +23,65 @@
 
     <div id="settings-panel">
       <div class="settings-row">
-        <label for="api-key-input">Gemini API Key</label>
-        <input type="password" id="api-key-input" placeholder="Paste your API key here">
+        <label for="provider-select">Provider</label>
+        <select id="provider-select"></select>
       </div>
-      <div class="settings-row">
-        <label for="model-input">Model</label>
-        <input type="text" id="model-input" value="gemini-2.5-flash">
+
+      <div id="custom-provider-form" style="display: none;">
+        <div class="settings-row">
+          <label for="custom-name">Custom provider name</label>
+          <input type="text" id="custom-name" placeholder="e.g. My OpenAI proxy">
+        </div>
+        <div class="settings-row">
+          <label for="custom-base-url">Base URL</label>
+          <input type="text" id="custom-base-url" placeholder="https://api.example.com/v1">
+        </div>
+        <div class="settings-row">
+          <label for="custom-adapter">API format</label>
+          <select id="custom-adapter">
+            <option value="openai">OpenAI</option>
+            <option value="openaiCompatible">OpenAI-compatible (OpenRouter, etc.)</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="gemini">Google Gemini</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label for="custom-api-key">API key</label>
+          <input type="password" id="custom-api-key" placeholder="Paste API key here">
+        </div>
+        <div class="settings-row">
+          <label for="custom-model">Model</label>
+          <div class="model-input-wrap">
+            <input type="text" id="custom-model" list="custom-model-list" placeholder="Type or select a model">
+            <button id="fetch-custom-models-btn" type="button" title="Fetch available models">↻</button>
+          </div>
+          <datalist id="custom-model-list"></datalist>
+        </div>
+        <div class="settings-row settings-row-inline custom-actions">
+          <button id="save-custom-provider-btn" class="secondary-btn">Add provider</button>
+          <button id="cancel-custom-provider-btn" class="secondary-btn">Cancel</button>
+        </div>
       </div>
+
+      <div id="provider-settings">
+        <div class="settings-row">
+          <label for="api-key-input" id="api-key-label">API Key</label>
+          <input type="password" id="api-key-input" placeholder="Paste your API key here">
+        </div>
+        <button id="save-key-btn" class="settings-btn">Save key</button>
+        <div class="settings-row model-row">
+          <label for="model-input">Model</label>
+          <div class="model-input-wrap">
+            <input type="text" id="model-input" list="model-list" placeholder="Type or select a model">
+            <button id="fetch-models-btn" type="button" title="Fetch available models">↻</button>
+          </div>
+          <datalist id="model-list"></datalist>
+        </div>
+        <div class="settings-row" id="delete-provider-row" style="display: none;">
+          <button id="delete-provider-btn" class="settings-btn danger-text">Remove provider</button>
+        </div>
+      </div>
+
       <div class="settings-row settings-row-inline">
         <label for="spoiler-toggle">Spoiler-free mode</label>
         <input type="checkbox" id="spoiler-toggle">
@@ -41,7 +93,6 @@
           <button id="clear-manual-btn">Reset</button>
         </div>
       </div>
-      <button id="save-key-btn">Save API Key</button>
     </div>
 
     <div id="messages"></div>
@@ -59,6 +110,7 @@
   </div>
 
   <script src="../lib/browser-polyfill.js"></script>
+  <script src="providers.js"></script>
   <script src="sidebar.js"></script>
 </body>
 </html>
