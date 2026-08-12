@@ -1,0 +1,36 @@
+name: Build and attach artifacts on release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Set version from release tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          jq --arg v "$VERSION" '.version = $v' manifests/chrome.json > tmp.json && mv tmp.json manifests/chrome.json
+          jq --arg v "$VERSION" '.version = $v' manifests/firefox.json > tmp.json && mv tmp.json manifests/firefox.json
+
+      - run: npm run build
+
+      - run: cd dist-chrome && zip -r ../chrome-v${{ env.VERSION }}.zip . && cd ..
+      - run: cd dist-firefox && zip -r ../firefox-v${{ env.VERSION }}.zip . && cd ..
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            chrome-v${{ env.VERSION }}.zip
+            firefox-v${{ env.VERSION }}.zip

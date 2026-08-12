@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Anime Assistant",
-  "version": "1.3",
+  "version": "1.4",
   "description": "Chat with AI about the anime you're watching",
   "permissions": ["activeTab", "tabs", "storage"],
   "host_permissions": ["<all_urls>", "https://generativelanguage.googleapis.com/*"],
